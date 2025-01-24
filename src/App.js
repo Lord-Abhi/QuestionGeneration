@@ -56,7 +56,22 @@ function App() {
 
     var transscript_prompt="Create @num @type questions based on the key points from the following text about effective communication in customer service. Each question should have one correct answer and three incorrect options. Label each as 'Question' without numbering them. After each question, provide the correct answer. text: @script. keep all the text simple no style."
     //var prompt = "Create @num @type questions focused on @subject in English grammar. Each question should have one correct answer and three incorrect options. Label each as 'Question' without numbering them. After each question, provide the correct answer."
-    var prompt = "Create @num @type questions focused on @subject in English grammar. Each question should have one correct answer and three incorrect options. Label each question as 'Question' without number them and answer as 'Answer'. After each question, provide the correct answer. keep all the text simple no style."
+    var prompt = `
+    you (the AI) help me(the user) to generate set of new questions each time by strictly following the instructions. 
+
+    Instruction for AI
+    
+    1. Generate @num questions on the @subject. @restriction
+    
+    2. The answer should be @type. 
+
+    3. Each answer must provide four options, having one correct option and three incorrect options.
+ 
+    4. Label each question as 'Question' without numbering them. 
+
+    5. After each question, provide the correct answer.
+    
+    6. Keep all the text simple no style or headers.`
 
     var subject = document.getElementById("subject").value;
     var type = document.getElementById("ques-type").value;
@@ -73,22 +88,34 @@ function App() {
     final_prompt = final_prompt.replace("@num", no_ques);
 
     if(type == "fill"){
-      final_prompt = final_prompt.replace("@type", "of fill-in-the-blank")
+      final_prompt = final_prompt.replace("@type", "of fill-in-the-blank-style")
+      final_prompt = final_prompt.replace("@restriction", "")
     }else if(type == "multi"){
       final_prompt = final_prompt.replace("@type", "of multiple-choice")
+      // final_prompt = final_prompt.replace("@restriction", "Avoid questions that contain '_' characters or fill-in-the-blank-style structures directly or indirectly in questions or quotation, or require users to complete a sentence by filling in missing words.")
+      //final_prompt = final_prompt.replace("@restriction", "Please exclude fill-in-the-blank-style questions or missing words or alphabet type questions.");
+      final_prompt = final_prompt.replace("@restriction", 
+        `Exclude questions which uses fill-in-the-blank-style type in 
+direct or indirect speech or dialogue,
+quoting someone else's words or text,
+quoted or cited directly,
+titles of shorter works,
+highlighting a specific word or phrase,
+a specific example for the question. 
+Exclude using of blanks in any part of the question.`)
     }else{
       final_prompt = final_prompt.replace("@type", "must have both multiple-choice types and fill-in-the-blanks types")
     }
     
 
-    //console.log("the final prompt: ", final_prompt)
+    console.log("the final prompt: ", final_prompt)
 
     //openai call
     try {
       console.log("calling openai");
       const response = await openai.createChatCompletion({
         model: 'gpt-4o-mini', 
-        messages: [{"role": "user", "content": final_prompt}]
+        messages: [{"role": "system", "content": final_prompt}]
       });
       //document.getElementById("result").value = response.data.choices[0].message.content;
       var selected_value = document.getElementsByName("set-type");
