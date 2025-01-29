@@ -52,11 +52,15 @@
         width: 15.2rem;
         border: 2px solid #dad5df;
     }
+
+    .pnl_ques_selection{
+        margin-bottom: 5px;
+    }
     
     .pnl_sel_main{
         background-color: transparent;
         color: black;
-        margin-top: 20px;
+        margin-top: 5px;
         width: 768px;
         height: 500px;
     }
@@ -67,17 +71,21 @@
     .pnl_sel_left{
         background-color: transparent;
         width: 350px;
-        height: 500px;
+        height: 470px;
         float: left;
         border: solid;
         overflow: auto;
         border: 2px solid #767676;
+        display: block;
+        margin: 0;
+        padding: 0;
+        position: relative;
     }
 
     .pnl_sel_right{
         background-color: transparent;
         width: 350px;
-        height: 500px;
+        height: 470px;
         float: right;
         border: solid;
         overflow: auto;
@@ -86,7 +94,7 @@
 
     .pnl_sel_middle{
         background-color: transparent;
-        height: 500px;
+        height: 470px;
         width: 60px;
         float: left;
         margin-left: 4px;
@@ -100,7 +108,6 @@
     }
     
     .btn{    
-        margin-top: 1.25rem;
         border-radius: 0.25rem;
         width: 48rem;
         --tw-bg-opacity: 1;
@@ -124,13 +131,23 @@
         left: 50rem;
     }
 
-    .btn_middle{
+    .btn_middle1{
         background-color: #5F249F;
         border-radius: 5px;
         width: 100%;
         height: 30px;
         font-weight: bolder;
         font-size: large;
+    }
+
+    .btn_middle2{
+        margin-top: 5px;
+        background-color: #5F249F;
+        border-radius: 5px;
+        width: 100%;
+        height: 30px;
+        font-weight: bolder;
+        font-size: small;
     }
 
     #pnl_bulk{
@@ -160,18 +177,22 @@
         color: #fff;
     }
 
-    .tbl_excel_data{
-        margin-top: 20px;
-        background-color: #fff;
+    .tbl_excel_data{               
+        margin-top: 20px !important;
+        background-color: #fff !important;
     }
 
-    .tbl_excel_data thead th{
+    /* .tbl_excel_data thead th{
         border: solid;
-    }
+    } */
 
     .tbl_excel_data tbody td{
-        border: solid;   
+        /* border: solid;    */
         padding-left: 2px;           
+    }
+
+    .tbl_excel_data .tblRow{
+        margin-bottom: 20px;
     }
 
     .overlay{
@@ -206,9 +227,24 @@
 
     .overlay .txb_disp{
         width: 100%;
-        height: 43rem;
+        height: 36rem;
         overflow: auto;
         padding: 0px 5px;
+    }
+
+    .overlay .btn{
+        margin-top: 1.25rem;
+        border-radius: 0.25rem;
+        width: 40rem;
+        background-color: #5F249F;
+        padding-top: 0.375rem;
+        padding-bottom: 0.375rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+        font-weight: 600;
+        color: rgb(243 244 246 / var(--tw-text-opacity));
     }
 
     /* loader gif starts */
@@ -216,7 +252,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        height: 90vh;
     }
 
     .loader {

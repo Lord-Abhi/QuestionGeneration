@@ -7,6 +7,8 @@ import Logo from "./assets/logo.png";
 
 function App() {  
   const [data, setData] = useState([]);
+  const [isSelectedQuestionSet, setSelectedQuestionSet] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(1);
 
   window.onload = ()=>{document.getElementById('random').checked='checked'};
 
@@ -15,7 +17,7 @@ function App() {
   });
 
   const openai = new OpenAIApi(configuration);
-  console.log("open ai config: ",openai)
+  //console.log("open ai config: ",openai)
 
 
   //handle radio button 
@@ -24,22 +26,31 @@ function App() {
     var selected_value = document.getElementsByName("set-type")
     //console.log("selected_value: ", selected_value)
     if(selected_value[0].checked){
-      console.log("the radio: ",selected_value[0].value)
+      //console.log("the radio: ",selected_value[0].value)
       document.getElementById('pnl_ques_option').style.display="block";
       document.getElementById('pnl_ques_generate').style.display="none";
       document.getElementById('pnl_bulk').style.display="none";
+      document.getElementById('btnSaveTempley').style.display="none";
+      document.getElementById('btnPreview').style.display="block";
+      setSelectedQuestionSet(false);
       
     } else if(selected_value[1].checked){
-      console.log("the radio: ",selected_value[1].value)
+      //console.log("the radio: ",selected_value[1].value)
       document.getElementById('pnl_ques_option').style.display="block";
       document.getElementById('pnl_ques_generate').style.display="block";
       document.getElementById('pnl_bulk').style.display="none";
+      document.getElementById('btnSaveTempley').style.display="block";
+      document.getElementById('btnPreview').style.display="none";
+      setSelectedQuestionSet(true);
 
     } else if(selected_value[2].checked){
-      console.log("the radio: ",selected_value[2].value)
+      //console.log("the radio: ",selected_value[2].value)
       document.getElementById('pnl_ques_option').style.display="none";
       document.getElementById('pnl_ques_generate').style.display="none";
       document.getElementById('pnl_bulk').style.display="block";
+      document.getElementById('btnSaveTempley').style.display="block";
+      document.getElementById('btnPreview').style.display="none";
+      setSelectedQuestionSet(false);
     } 
     document.getElementById('subject').value="";
     document.getElementById('ques-type').value="";
@@ -56,7 +67,24 @@ function App() {
 
     var transscript_prompt="Create @num @type questions based on the key points from the following text about effective communication in customer service. Each question should have one correct answer and three incorrect options. Label each as 'Question' without numbering them. After each question, provide the correct answer. text: @script. keep all the text simple no style."
     //var prompt = "Create @num @type questions focused on @subject in English grammar. Each question should have one correct answer and three incorrect options. Label each as 'Question' without numbering them. After each question, provide the correct answer."
-    var prompt = "Create @num @type questions focused on @subject in English grammar. Each question should have one correct answer and three incorrect options. Label each question as 'Question' without number them and answer as 'Answer'. After each question, provide the correct answer. keep all the text simple no style."
+    var prompt = `
+you (the AI) help me(the user) to generate a new set of questions each time by strictly following the instructions. 
+
+Instruction for AI
+    
+1. Generate @num simple multiple-choice questions about @subject in grammar.
+
+2. @restriction
+
+3. Each instructed question type must be in multiple-choice format and provide four answer options:
+  -One correct option
+  -Three incorrect options
+
+4. Label each question as 'Question' without numbering them.
+
+5. After each question, provide the correct answer immediately.
+
+6. Keep all text plain and simple without any formatting, headers, or special styles.`
 
     var subject = document.getElementById("subject").value;
     var type = document.getElementById("ques-type").value;
@@ -73,22 +101,34 @@ function App() {
     final_prompt = final_prompt.replace("@num", no_ques);
 
     if(type == "fill"){
-      final_prompt = final_prompt.replace("@type", "of fill-in-the-blank")
+      final_prompt = final_prompt.replace("@type", "fill-in-the-blank")
+      final_prompt = final_prompt.replace("@restriction", `The questions must not involve:
+          -Creating non fill-in-the-blank-style questions.
+          -The question which do not have a blank in it.`)
     }else if(type == "multi"){
-      final_prompt = final_prompt.replace("@type", "of multiple-choice")
+      final_prompt = final_prompt.replace("@type", "multiple-choice")
+      // final_prompt = final_prompt.replace("@restriction", "Avoid questions that contain '_' characters or fill-in-the-blank-style structures directly or indirectly in questions or quotation, or require users to complete a sentence by filling in missing words.")
+      //final_prompt = final_prompt.replace("@restriction", "Please exclude fill-in-the-blank-style questions or missing words or alphabet type questions.");
+      final_prompt = final_prompt.replace("@restriction", `The questions must not involve:
+          -Creating fill-in-the-blank-style questions.
+          -Using blanks in any part of the question.
+          -Direct or indirect speech or dialogue.
+          -Quoting or citing someone else’s words or text.
+          -Titles of shorter works.
+          -Highlighting a specific word or phrase.
+          -Using a specific example for the question.`)
     }else{
       final_prompt = final_prompt.replace("@type", "must have both multiple-choice types and fill-in-the-blanks types")
-    }
-    
+    }    
 
-    //console.log("the final prompt: ", final_prompt)
+    console.log("the final prompt: ", final_prompt)
 
     //openai call
     try {
-      console.log("calling openai");
+      //console.log("calling openai");
       const response = await openai.createChatCompletion({
         model: 'gpt-4o-mini', 
-        messages: [{"role": "user", "content": final_prompt}]
+        messages: [{"role": "system", "content": final_prompt}]
       });
       //document.getElementById("result").value = response.data.choices[0].message.content;
       var selected_value = document.getElementsByName("set-type");
@@ -132,9 +172,9 @@ function App() {
     question.forEach(element => {
       var uniq = uid();
       //console.log(element.trim())
-      document.getElementById("pnl_sel_left").innerHTML += "<div id='box_"+uniq+"'>"+
+      document.getElementById("pnl_sel_left").innerHTML += "<div id='box_"+uniq+"' style='margin-bottom: 5px;'>"+
                     "<input id='cb_"+uniq+"' type='checkbox' name='left_selection' value='"+uniq+"' onclick='handleSelect(`"+uniq+"`)' hidden/>"+
-                    "<textarea for='cb_"+uniq+"' id='lbl_"+uniq+"' onclick='handleTAClick(`"+uniq+"`)' name='tarea_selection' style='display: block; outline: none; resize: none; padding: 0px 5px; cursor: pointer;' readonly>"+
+                    "<textarea class='tarea_selection' for='cb_"+uniq+"' id='lbl_"+uniq+"' onclick='handleTAClick(`"+uniq+"`)' name='tarea_selection' style='display: block; margin-bottom:15px; outline: none; resize: none; padding: 0px 5px; cursor: pointer;' readonly>"+
                     element.trim()+
                     "</textarea>"+
                   "</div>";
@@ -171,6 +211,18 @@ function App() {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      console.log("excel data: ", jsonData);
+      jsonData.forEach((data)=>{
+        if(data.length>0){
+          data[0] = '';
+          data[2] = 'a) '+data[2];
+          data[3] = 'b) '+data[3];
+          data[4] = 'c) '+data[4];
+          data[5] = 'd) '+data[5];
+          data[6] = 'Correct Answer: '+data[6];
+          console.log(data);  
+        }        
+      });
       setData(jsonData);
     };
 
@@ -184,12 +236,12 @@ function App() {
 
   const handleMoveRightClick = () => {
     var slected = document.getElementsByName("left_selection")
-    console.log(slected);
+    //console.log(slected);
     var list_checked = []
 
     slected.forEach(element => {
       if(element.checked){
-        console.log(element.id)
+        //console.log(element.id)
         list_checked.push(element)
       }      
     });
@@ -207,15 +259,46 @@ function App() {
       document.getElementById("box_"+element.value).remove();
       resizeTextArea('right');
     });
-    
+    document.getElementById('pnl_sel_left').querySelectorAll('textarea').forEach((child)=>{
+      child.style.height = "144px";
+    });
   };
 
-  const handleSaveClick = () => {
+  const handlePreviewClick = () => {
     handleClick();
   };
 
+  const handleSaveClick = () => {
+    handleSaveTempletClick();
+  }
+
+  const handleSaveTempletClick = () => {
+    window.location.href = "http://localhost:3000/";
+  }
+
   const handleXClick = () => {
     document.getElementById('overlay').style.display = 'none';
+  };
+
+  const handleClearAllClick = () =>{
+    document.getElementById('pnl_sel_right').innerHTML="";    
+  };
+
+  const handleSubjectChange = () => {
+    //console.log(isSelectedQuestionSet);    
+    setSelectedIndex(document.getElementById('subject').selectedIndex);
+    if(isSelectedQuestionSet){
+      if(document.getElementById('pnl_sel_right').innerHTML.trim()!="")
+      {
+        if(window.confirm("Do you want to discard selected question(s)?")){
+          document.getElementById('pnl_sel_right').innerHTML="";
+        }else{
+          document.getElementById('subject').selectedIndex = selectedIndex;
+          setSelectedIndex(selectedIndex);
+        }
+      }      
+      //console.log('selectedIndex', selectedIndex);
+    }
   };
 
   return (
@@ -232,6 +315,7 @@ function App() {
         <div className="overlay_main">
           <div><button onClick={handleXClick} className="btn_overlay">&nbsp; X &nbsp;</button></div>
           <div><textarea id='txb_disp' className="txb_disp"></textarea></div>
+          <div><button onClick={handleSaveClick} className="btn">Save Test</button></div>
         </div>        
       </div>
       <div id='overlay-loading' class='overlay' hidden>
@@ -253,12 +337,12 @@ function App() {
               <input className="radio" type="radio" name="set-type" id="selected" onClick={handleRadio}/><label for="selected">Create Selected Question Set</label>
             </span>
             <span className="radio-span">
-              <input className="radio" type="radio" name="set-type" id="bulk" onClick={handleRadio}/><label for="bulk">Upload Question from Templet</label>
+              <input className="radio" type="radio" name="set-type" id="bulk" onClick={handleRadio}/><label for="bulk">Upload Question from Template</label>
             </span>
           </div>
-          <div id="pnl_ques_option">
+          <div id="pnl_ques_option" className="pnl_ques_selection">
             <span class="drop-down-span">
-              <select class="drop-down" id="subject">
+              <select class="drop-down" id="subject" onChange={handleSubjectChange}>
                 <option value="" selected disabled hidden>Choose Subject</option>
                 <option value="definite and indefinite articles">Article</option>
                 <option value="nouns">Noun</option>
@@ -286,7 +370,7 @@ function App() {
           </div>
           <div id="pnl_ques_generate" hidden>
             <div>
-              <button onClick={handleClick} className="btn"> Generate </button>
+              <button onClick={handlePreviewClick} className="btn"> Generate </button>
             </div>
             <div className="pnl_sel_main">
               <div>
@@ -294,41 +378,46 @@ function App() {
               </div>
               <div>
                 <div id="pnl_sel_left" className="pnl_sel_left"></div>
-                <div className="pnl_sel_middle"><button className="btn_middle" onClick={handleMoveRightClick}>&gt;&gt;</button></div>
+                <div className="pnl_sel_middle">
+                  <div>
+                    <button className="btn_middle1" onClick={handleMoveRightClick}>&gt;&gt;</button>
+                  </div>
+                  <div>
+                    <button className="btn_middle2" onClick={handleClearAllClick}>Clear All</button>
+                  </div>
+                </div>
                 <div id="pnl_sel_right" className="pnl_sel_right"></div>
               </div>            
             </div>
           </div>
           <div id="pnl_bulk" hidden>
             <div>
-              <span><a href="https://dxcportal-my.sharepoint.com/personal/abhinash_dora_dxc_com/Documents/Upload%20Question%20Templet.xlsx"><button className="btn_bulk">Download Templet</button></a></span>
+              <span><a href="https://dxcportal-my.sharepoint.com/personal/abhinash_dora_dxc_com/Documents/Upload%20Question%20Templet.xlsx"><button className="btn_bulk">Download Template</button></a></span>
               <span className="btn_bulk"><input type="file" id="excel_file" onChange={handleUpload} accept=".xls,.xlsx" hidden/><label for="excel_file">Choose file</label></span>
               <span><label id="disp_file_name" className="disp_file_name">No file chosen.</label></span>
             </div>
-            <div class="pnl_excel_data">
-            <table class="tbl_excel_data">
-              <thead>
-                <tr>
-                  {data[0] && data[0].map((header, index) => (
-                    <th key={index}>{header}</th>
-                  ))}
-                </tr>
-              </thead>
+            <div class="pnl_excel_data" style={{height: "530px", overflow: "auto"}}>
+            <table class="tbl_excel_data" style={{width: "100%"}}>
               <tbody>
                 {data.slice(1).map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {row.map((cell, cellIndex) => (
-                      <td key={cellIndex}>{cell}</td>
-                    ))}
+                  <tr className="tblRow" key={rowIndex} style={{marginBottom: "20px", borderBottom: "1px solid #ccc"}}>
+                     <table>
+                      {row.map((cell, cellIndex) => (                      
+                        <tr>
+                          <td key={cellIndex}>{cell}</td>
+                        </tr>                        
+                      ))}
+                    </table>
                   </tr>
-                ))}
+                ))}                
               </tbody>
             </table>
             </div>
           </div> 
         </div>
         <div>
-          <button onClick={handleSaveClick} className="btn">Save Test</button>
+          <button id="btnPreview" onClick={handlePreviewClick} className="btn">Preview</button>
+          <button id="btnSaveTempley" onClick={handleSaveTempletClick} className="btn" hidden>Save Test</button>
         </div>      
       </div>      
     </main>

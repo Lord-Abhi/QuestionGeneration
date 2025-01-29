@@ -12,7 +12,7 @@ function handleSelect(uniqu){
     console.log("uniqe_id: ", uniqu)
     if(document.getElementById('cb_'+uniqu).checked){
         document.getElementById("box_"+uniqu).style.border='2px solid #5F249F';
-        document.getElementById("box_"+uniqu).style.marginBottom='5px';
+        //document.getElementById("box_"+uniqu).style.marginBottom='5px';
     }else{
         document.getElementById("box_"+uniqu).style.border='2px solid #fff';
     }
