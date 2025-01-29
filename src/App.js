@@ -323,6 +323,7 @@ Instruction for AI
         if(window.confirm("Do you want to discard the selected question(s)?")){
           document.getElementById('pnl_sel_left').innerHTML="";
           document.getElementById('pnl_sel_right').innerHTML="";
+          document.getElementById('pnl_sel_left').innerHTML="";
         }else{
           document.getElementById('subject').selectedIndex = selectedIndex;
           document.getElementById('pnl_sel_left').innerHTML="";
