@@ -138,6 +138,7 @@
         height: 30px;
         font-weight: bolder;
         font-size: large;
+        color: #fff;
     }
 
     .btn_middle2{
@@ -148,6 +149,7 @@
         height: 30px;
         font-weight: bolder;
         font-size: small;
+        color: #fff;
     }
 
     #pnl_bulk{

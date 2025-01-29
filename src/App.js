@@ -29,9 +29,10 @@ function App() {
       //console.log("the radio: ",selected_value[0].value)
       document.getElementById('pnl_ques_option').style.display="block";
       document.getElementById('pnl_ques_generate').style.display="none";
-      document.getElementById('pnl_bulk').style.display="none";
-      document.getElementById('btnSaveTempley').style.display="none";
+      document.getElementById('pnl_bulk').style.display="none";      
       document.getElementById('btnPreview').style.display="block";
+      document.getElementById('btnPreview2').style.display="none";
+      document.getElementById('btnSaveTempley').style.display="none";
       setSelectedQuestionSet(false);
       
     } else if(selected_value[1].checked){
@@ -39,8 +40,9 @@ function App() {
       document.getElementById('pnl_ques_option').style.display="block";
       document.getElementById('pnl_ques_generate').style.display="block";
       document.getElementById('pnl_bulk').style.display="none";
-      document.getElementById('btnSaveTempley').style.display="block";
       document.getElementById('btnPreview').style.display="none";
+      document.getElementById('btnPreview2').style.display="block";
+      document.getElementById('btnSaveTempley').style.display="none";
       setSelectedQuestionSet(true);
 
     } else if(selected_value[2].checked){
@@ -48,8 +50,9 @@ function App() {
       document.getElementById('pnl_ques_option').style.display="none";
       document.getElementById('pnl_ques_generate').style.display="none";
       document.getElementById('pnl_bulk').style.display="block";
-      document.getElementById('btnSaveTempley').style.display="block";
       document.getElementById('btnPreview').style.display="none";
+      document.getElementById('btnPreview2').style.display="none";
+      document.getElementById('btnSaveTempley').style.display="block";
       setSelectedQuestionSet(false);
     } 
     document.getElementById('subject').value="";
@@ -77,12 +80,15 @@ Instruction for AI
 2. @restriction
 
 3. Each instructed question type must be in multiple-choice format and provide four answer options:
+  -Label each answer as 'Option' with a number in it.
   -One correct option
   -Three incorrect options
 
-4. Label each question as 'Question' without numbering them.
+4. Label each question as 'Question' @ques_num on them.
 
-5. After each question, provide the correct answer immediately.
+5. After each question, provide the correct answer immediately:
+  -Label it as 'Correct answer:'.
+  -Provide only the text of the correct answer without numbering.
 
 6. Keep all text plain and simple without any formatting, headers, or special styles.`
 
@@ -120,6 +126,12 @@ Instruction for AI
     }else{
       final_prompt = final_prompt.replace("@type", "must have both multiple-choice types and fill-in-the-blanks types")
     }    
+
+    if(!isSelectedQuestionSet){ 
+      final_prompt = final_prompt.replace("@ques_num", `with question number`);
+    }else{
+      final_prompt = final_prompt.replace("@ques_num", `with no question number`);
+    }
 
     console.log("the final prompt: ", final_prompt)
 
@@ -175,7 +187,7 @@ Instruction for AI
       document.getElementById("pnl_sel_left").innerHTML += "<div id='box_"+uniq+"' style='margin-bottom: 5px;'>"+
                     "<input id='cb_"+uniq+"' type='checkbox' name='left_selection' value='"+uniq+"' onclick='handleSelect(`"+uniq+"`)' hidden/>"+
                     "<textarea class='tarea_selection' for='cb_"+uniq+"' id='lbl_"+uniq+"' onclick='handleTAClick(`"+uniq+"`)' name='tarea_selection' style='display: block; margin-bottom:15px; outline: none; resize: none; padding: 0px 5px; cursor: pointer;' readonly>"+
-                    element.trim()+
+                    "Question: "+element.trim()+
                     "</textarea>"+
                   "</div>";
       resizeTextArea('left');
@@ -206,6 +218,7 @@ Instruction for AI
     const reader = new FileReader();
 
     reader.onload = (event) => {
+      var quesNo = 0;
       const data = new Uint8Array(event.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
       const firstSheetName = workbook.SheetNames[0];
@@ -215,12 +228,14 @@ Instruction for AI
       jsonData.forEach((data)=>{
         if(data.length>0){
           data[0] = '';
-          data[2] = 'a) '+data[2];
-          data[3] = 'b) '+data[3];
-          data[4] = 'c) '+data[4];
-          data[5] = 'd) '+data[5];
+          data[1] = 'Question '+quesNo+': '+data[1];
+          data[2] = 'Option 1: '+data[2];
+          data[3] = 'Option 2: '+data[3];
+          data[4] = 'Option 3: '+data[4];
+          data[5] = 'Option 4: '+data[5];
           data[6] = 'Correct Answer: '+data[6];
           console.log(data);  
+          quesNo+=1;
         }        
       });
       setData(jsonData);
@@ -252,7 +267,7 @@ Instruction for AI
 
       document.getElementById('pnl_sel_right').innerHTML+="<div id='rbox_"+element.value+"' style='border: 3px solid #fff; background_color: #5F249F; borderradius: 5px;'>"+
           "<div style='position: relative;'><button onClick={handleRemoveClick(`"+element.value+"`)} style='position: absolute; background-color: #5F249F; border: solid 2px #fff; border-radius: 50%; font-size: xx-small; color: #fff;font-weight: 900; right: 0;'>&nbsp; X &nbsp;</button></div>"+
-          "<textarea name='tarea_selection' style='display: block; outline: none; resize: none; padding: 0px 5px; border:2px solid #5F249F;' for='cb_"+element.value+"' id='lbl_"+element.value+"' onclick='handleTAClick(`"+element.value+"`)' readonly>"+
+          "<textarea name='tarea_selection' class='tbox_right' style='display: block; outline: none; resize: none; padding: 0px 5px; border:2px solid #5F249F;' for='cb_"+element.value+"' id='lbl_"+element.value+"' onclick='handleTAClick(`"+element.value+"`)' readonly>"+
           inner_context+
             "</textarea>"+
         "</div>";
@@ -267,6 +282,20 @@ Instruction for AI
   const handlePreviewClick = () => {
     handleClick();
   };
+
+  const handlePreview2Click = () => {
+    var finalText = '';
+    var quesNo = 1;
+    //console.log("right panel data: ", document.getElementsByClassName('tbox_right'));
+    document.getElementById('txb_disp').value = "";
+    document.getElementById('pnl_sel_right').querySelectorAll('textarea').forEach((child)=>{
+      //console.log("right panel data: ", child.value);
+      finalText += child.value.replace('Question', 'Question '+quesNo)+"\n\n";
+      document.getElementById('overlay').style.display = 'block';
+      quesNo += 1;
+    });
+    document.getElementById('txb_disp').value += finalText.trim();
+  }
 
   const handleSaveClick = () => {
     handleSaveTempletClick();
@@ -285,19 +314,24 @@ Instruction for AI
   };
 
   const handleSubjectChange = () => {
-    //console.log(isSelectedQuestionSet);    
-    setSelectedIndex(document.getElementById('subject').selectedIndex);
+    var current_value = document.getElementById('subject').value;
+    console.log("current vlaue: ", current_value);
+    //setSelectedIndex(document.getElementById('subject').selectedIndex);
     if(isSelectedQuestionSet){
       if(document.getElementById('pnl_sel_right').innerHTML.trim()!="")
       {
-        if(window.confirm("Do you want to discard selected question(s)?")){
+        if(window.confirm("Do you want to discard the selected question(s)?")){
+          document.getElementById('pnl_sel_left').innerHTML="";
           document.getElementById('pnl_sel_right').innerHTML="";
         }else{
           document.getElementById('subject').selectedIndex = selectedIndex;
-          setSelectedIndex(selectedIndex);
-        }
-      }      
+          document.getElementById('pnl_sel_left').innerHTML="";
+          //setSelectedIndex(selectedIndex);
+          document.getElementById('subject').value = current_value;
+        }        
+      }            
       //console.log('selectedIndex', selectedIndex);
+      console.log("dropdown value: ",document.getElementById('subject').value);    
     }
   };
 
@@ -343,7 +377,7 @@ Instruction for AI
           <div id="pnl_ques_option" className="pnl_ques_selection">
             <span class="drop-down-span">
               <select class="drop-down" id="subject" onChange={handleSubjectChange}>
-                <option value="" selected disabled hidden>Choose Subject</option>
+                <option value="" selected disabled hidden>Choose subject</option>
                 <option value="definite and indefinite articles">Article</option>
                 <option value="nouns">Noun</option>
                 <option value="verbs">Verb</option>
@@ -361,7 +395,7 @@ Instruction for AI
             </span>
             <span class="drop-down-span">
               <select class="drop-down" id="number">
-                <option value="" selected disabled hidden>Choose no of question</option>
+                <option value="" selected disabled hidden>Choose number of questions</option>
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="15">15</option>
@@ -374,7 +408,7 @@ Instruction for AI
             </div>
             <div className="pnl_sel_main">
               <div>
-                <p>Please select the questions from left section to create the test.</p>
+                <p>Please select the questions from the left section to create the test.</p>
               </div>
               <div>
                 <div id="pnl_sel_left" className="pnl_sel_left"></div>
@@ -392,7 +426,7 @@ Instruction for AI
           </div>
           <div id="pnl_bulk" hidden>
             <div>
-              <span><a href="https://dxcportal-my.sharepoint.com/personal/abhinash_dora_dxc_com/Documents/Upload%20Question%20Templet.xlsx"><button className="btn_bulk">Download Template</button></a></span>
+              <span><a href="https://dxcportal-my.sharepoint.com/personal/abhinash_dora_dxc_com/Documents/Documents/Upload%20Question%20Templet.xlsx"><button className="btn_bulk">Download Template</button></a></span>
               <span className="btn_bulk"><input type="file" id="excel_file" onChange={handleUpload} accept=".xls,.xlsx" hidden/><label for="excel_file">Choose file</label></span>
               <span><label id="disp_file_name" className="disp_file_name">No file chosen.</label></span>
             </div>
@@ -400,8 +434,8 @@ Instruction for AI
             <table class="tbl_excel_data" style={{width: "100%"}}>
               <tbody>
                 {data.slice(1).map((row, rowIndex) => (
-                  <tr className="tblRow" key={rowIndex} style={{marginBottom: "20px", borderBottom: "1px solid #ccc"}}>
-                     <table>
+                  <tr className="tblRow" key={rowIndex}>
+                     <table style={{marginBottom: "10px"}}>
                       {row.map((cell, cellIndex) => (                      
                         <tr>
                           <td key={cellIndex}>{cell}</td>
@@ -417,6 +451,7 @@ Instruction for AI
         </div>
         <div>
           <button id="btnPreview" onClick={handlePreviewClick} className="btn">Preview</button>
+          <button id="btnPreview2" onClick={handlePreview2Click} className="btn" hidden>Preview</button>
           <button id="btnSaveTempley" onClick={handleSaveTempletClick} className="btn" hidden>Save Test</button>
         </div>      
       </div>      
