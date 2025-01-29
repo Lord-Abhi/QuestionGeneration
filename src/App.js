@@ -323,7 +323,6 @@ Instruction for AI
         if(window.confirm("Do you want to discard the selected question(s)?")){
           document.getElementById('pnl_sel_left').innerHTML="";
           document.getElementById('pnl_sel_right').innerHTML="";
-          document.getElementById('pnl_sel_left').innerHTML="";
         }else{
           document.getElementById('subject').selectedIndex = selectedIndex;
           document.getElementById('pnl_sel_left').innerHTML="";
@@ -366,13 +365,13 @@ Instruction for AI
         <div className="main-content">
           <div className="radio-container">
             <span className="radio-span">
-              <input className="radio" type="radio" name="set-type" id="random" onClick={handleRadio}/><label for="random">Create Ramdom Question Set</label> 
+              <input className="radio" type="radio" name="set-type" id="random" onClick={handleRadio}/><label for="random">Create Random Questions </label> 
             </span>
-            <span className="radio-span">
-              <input className="radio" type="radio" name="set-type" id="selected" onClick={handleRadio}/><label for="selected">Create Selected Question Set</label>
+            <span className="radio-span" style={{marginLeft: "25px"}}>
+              <input className="radio" type="radio" name="set-type" id="selected" onClick={handleRadio}/><label for="selected">Create Customized Questions </label>
             </span>
-            <span className="radio-span">
-              <input className="radio" type="radio" name="set-type" id="bulk" onClick={handleRadio}/><label for="bulk">Upload Question from Template</label>
+            <span className="radio-span" style={{marginLeft: "-4px"}}>
+              <input className="radio" type="radio" name="set-type" id="bulk" onClick={handleRadio}/><label for="bulk">Bulk Upload Questions</label>
             </span>
           </div>
           <div id="pnl_ques_option" className="pnl_ques_selection">
