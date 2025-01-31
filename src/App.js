@@ -133,7 +133,7 @@ Instruction for AI
       final_prompt = final_prompt.replace("@ques_num", `with no question number`);
     }
 
-    console.log("the final prompt: ", final_prompt)
+    //console.log("the final prompt: ", final_prompt)
 
     //openai call
     try {
@@ -148,6 +148,7 @@ Instruction for AI
         document.getElementById('txb_disp').value = response.data.choices[0].message.content;
         document.getElementById("overlay-loading").style.display='none';
         document.getElementById('overlay').style.display = 'block';
+        document.getElementById('disp_overlay').style.display = 'block';
       }else{
         loadSelection(response.data.choices[0].message.content);
       }      
@@ -280,21 +281,39 @@ Instruction for AI
   };
 
   const handlePreviewClick = () => {
-    handleClick();
+    if(document.getElementById('subject').value){
+      if(document.getElementById('ques-type').value){
+        if(document.getElementById('number').value){
+          handleClick();
+        }else{
+          alert("Please select number of questions.");
+        }
+      }else{
+        alert("Please select the question type.");
+      }
+    }else{
+      alert("Please select the subject.");
+    }
   };
 
   const handlePreview2Click = () => {
-    var finalText = '';
-    var quesNo = 1;
-    //console.log("right panel data: ", document.getElementsByClassName('tbox_right'));
-    document.getElementById('txb_disp').value = "";
-    document.getElementById('pnl_sel_right').querySelectorAll('textarea').forEach((child)=>{
-      //console.log("right panel data: ", child.value);
-      finalText += child.value.replace('Question', 'Question '+quesNo)+"\n\n";
-      document.getElementById('overlay').style.display = 'block';
-      quesNo += 1;
-    });
-    document.getElementById('txb_disp').value += finalText.trim();
+    //console.log("right panel: ", document.getElementById('pnl_sel_right').innerHTML.trim());
+    if(document.getElementById('pnl_sel_right').innerHTML.trim()!=""){
+      var finalText = '';
+      var quesNo = 1;
+      //console.log("right panel data: ", document.getElementsByClassName('tbox_right'));
+      document.getElementById('txb_disp').value = "";
+      document.getElementById('pnl_sel_right').querySelectorAll('textarea').forEach((child)=>{
+        //console.log("right panel data: ", child.value);
+        finalText += child.value.replace('Question', 'Question '+quesNo)+"\n\n";
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('disp_overlay').style.display = 'block';
+        quesNo += 1;
+      });
+      document.getElementById('txb_disp').value += finalText.trim();
+    }else{
+      alert("Please move question(s) to the right panel to preview.");
+    }
   }
 
   const handleSaveClick = () => {
@@ -302,11 +321,22 @@ Instruction for AI
   }
 
   const handleSaveTempletClick = () => {
+    console.log("bulk upload selected: ", document.getElementById('bulk').checked)
+    if(document.getElementById('bulk').checked){
+      var tbody = document.getElementById("tbl_bulkUpload").getElementsByTagName("tbody")[0]
+      console.log(tbody)
+      if (tbody.rows.length === 0) {
+        alert("Please upload the template to save.");
+      } else {
+        window.location.href = "http://localhost:3000/";
+      }
+    }
     window.location.href = "http://localhost:3000/";
   }
 
   const handleXClick = () => {
     document.getElementById('overlay').style.display = 'none';
+    document.getElementById('disp_overlay').style.display = 'none';
   };
 
   const handleClearAllClick = () =>{
@@ -314,25 +344,31 @@ Instruction for AI
   };
 
   const handleSubjectChange = () => {
-    var current_value = document.getElementById('subject').value;
-    console.log("current vlaue: ", current_value);
-    //setSelectedIndex(document.getElementById('subject').selectedIndex);
     if(isSelectedQuestionSet){
       if(document.getElementById('pnl_sel_right').innerHTML.trim()!="")
       {
-        if(window.confirm("Do you want to discard the selected question(s)?")){
-          document.getElementById('pnl_sel_left').innerHTML="";
-          document.getElementById('pnl_sel_right').innerHTML="";
-        }else{
-          document.getElementById('subject').selectedIndex = selectedIndex;
-          document.getElementById('pnl_sel_left').innerHTML="";
-          //setSelectedIndex(selectedIndex);
-          document.getElementById('subject').value = current_value;
-        }        
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('confirm_overlay').style.display = 'block';
       }            
-      //console.log('selectedIndex', selectedIndex);
-      console.log("dropdown value: ",document.getElementById('subject').value);    
     }
+  };
+
+  const handleConfirmAction = (e) =>{
+    //console.log(e.target.textContent)
+    var current_value = document.getElementById('subject').value;
+    console.log("current vlaue: ", current_value);
+
+    if(e.target.textContent.trim() == "Yes"){
+      document.getElementById('pnl_sel_left').innerHTML="";
+      document.getElementById('pnl_sel_right').innerHTML="";
+    }else{
+      document.getElementById('subject').selectedIndex = selectedIndex;
+      document.getElementById('pnl_sel_left').innerHTML="";
+      document.getElementById('subject').value = current_value;
+    }
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('confirm_overlay').style.display = 'none';
+    console.log("dropdown value: ",document.getElementById('subject').value);    
   };
 
   return (
@@ -346,11 +382,18 @@ Instruction for AI
         </div>
       </div>
       <div id='overlay' class='overlay' hidden>
-        <div className="overlay_main">
+        <div id='disp_overlay' className="overlay_main" hidden>
           <div><button onClick={handleXClick} className="btn_overlay">&nbsp; X &nbsp;</button></div>
           <div><textarea id='txb_disp' className="txb_disp"></textarea></div>
           <div><button onClick={handleSaveClick} className="btn">Save Test</button></div>
-        </div>        
+        </div>   
+        <div id='confirm_overlay' class="confirm-box" hidden>
+          <p>Do you want to discard the selected question(s)?</p>
+          <div class="confirm-btns">
+            <button class="yes" onClick={handleConfirmAction}>Yes</button>
+            <button class="no" onClick={handleConfirmAction}>No</button>
+          </div>
+        </div>     
       </div>
       <div id='overlay-loading' class='overlay' hidden>
         <div className="overlay_main">
@@ -431,7 +474,7 @@ Instruction for AI
               <span><label id="disp_file_name" className="disp_file_name">No file chosen.</label></span>
             </div>
             <div class="pnl_excel_data" style={{height: "530px", overflow: "auto"}}>
-            <table class="tbl_excel_data" style={{width: "100%"}}>
+            <table id="tbl_bulkUpload" class="tbl_excel_data" style={{width: "100%"}}>
               <tbody>
                 {data.slice(1).map((row, rowIndex) => (
                   <tr className="tblRow" key={rowIndex}>
