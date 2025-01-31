@@ -328,10 +328,10 @@ Instruction for AI
       if (tbody.rows.length === 0) {
         alert("Please upload the template to save.");
       } else {
-        window.location.href = "http://localhost:3000/";
+        window.location.href = "https://questiongeneration-3486.onrender.com/";
       }
     }
-    window.location.href = "http://localhost:3000/";
+    window.location.href = "https://questiongeneration-3486.onrender.com/";
   }
 
   const handleXClick = () => {
